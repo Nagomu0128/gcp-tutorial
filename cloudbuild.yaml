@@ -1,5 +1,4 @@
 substitutions:
-  _IMAGE: asia-northeast2-docker.pkg.dev/$PROJECT_ID/gcp-tutorial/my-image
   _REGION: asia-northeast2
   _SERVICE: gcp-tutorial-service
 
@@ -9,14 +8,14 @@ steps:
     args:
       - build
       - -t
-      - $_IMAGE:$SHORT_SHA
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/gcp-tutorial/my-image:${SHORT_SHA}
       - .
 
   # 2. Artifact Registry にプッシュ
   - name: gcr.io/cloud-builders/docker
     args:
       - push
-      - $_IMAGE:$SHORT_SHA
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/gcp-tutorial/my-image:${SHORT_SHA}
 
   # 3. Cloud Run にデプロイ
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
@@ -25,13 +24,13 @@ steps:
       - run
       - deploy
       - $_SERVICE
-      - --image=$_IMAGE:$SHORT_SHA
+      - --image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/gcp-tutorial/my-image:${SHORT_SHA}
       - --region=$_REGION
       - --platform=managed
       - --allow-unauthenticated
 
 images:
-  - $_IMAGE:$SHORT_SHA
+  - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/gcp-tutorial/my-image:${SHORT_SHA}
 
 options:
   logging: CLOUD_LOGGING_ONLY
