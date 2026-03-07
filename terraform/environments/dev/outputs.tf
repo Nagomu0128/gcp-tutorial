@@ -13,3 +13,7 @@ output "cloud_sql_connection_name" {
 output "storage_bucket_name" {
   value = module.cloud_storage.bucket_name
 }
+
+output "cloud_run_sa_email" {
+  value = module.iam.cloud_run_sa_email
+}
