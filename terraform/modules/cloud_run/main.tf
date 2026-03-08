@@ -13,6 +13,7 @@ resource "google_cloud_run_v2_service" "this" {
       }
 
       resources {
+        cpu_idle = var.cpu_allocation == "request" ? true : false
         limits = {
           cpu    = var.cpu
           memory = var.memory

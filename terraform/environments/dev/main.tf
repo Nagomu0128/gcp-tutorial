@@ -8,10 +8,10 @@ terraform {
     }
   }
 
-  # backend "gcs" {
-  #   bucket = "gcp-tutorial-488405-terraform-state"
-  #   prefix = "env/dev"
-  # }
+  backend "gcs" {
+    bucket = "gcp-tutorial-488405-terraform-state"
+    prefix = "env/dev"
+  }
 }
 
 provider "google" {
@@ -106,6 +106,7 @@ module "cloud_run" {
   max_instances         = 1
   cpu                   = "1"
   memory                = "128Mi"
+  cpu_allocation        = "request"
   allow_unauthenticated = true
   service_account_email = module.iam.cloud_run_sa_email
 

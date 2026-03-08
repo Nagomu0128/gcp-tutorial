@@ -44,6 +44,6 @@ next-env.d.ts
 **/.terraform/
 *.tfstate
 *.tfstate.backup
+.terraform.tfstate.lock.info
 *.tfvars
 !*.tfvars.example
-.terraform.lock.hcl

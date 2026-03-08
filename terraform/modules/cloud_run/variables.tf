@@ -21,6 +21,12 @@ variable "memory" {
   default = "512Mi"
 }
 
+variable "cpu_allocation" {
+  description = "CPU allocation type: 'always' or 'request' (throttled)"
+  type        = string
+  default     = "always"
+}
+
 variable "min_instances" {
   type    = number
   default = 0
