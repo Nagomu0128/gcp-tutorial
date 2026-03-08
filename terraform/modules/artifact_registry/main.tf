@@ -23,8 +23,4 @@ resource "google_artifact_registry_repository" "docker" {
       keep_count = var.cleanup_keep_count
     }
   }
-
-  vulnerability_scanning_config {
-    enablement_config = "DISABLED"
-  }
 }
