@@ -96,6 +96,7 @@ export default function ConversationPage() {
         messages={messages}
         streamingContent={streamingContent}
         loading={loading}
+        thinking={sending}
       />
       <ChatInput onSend={handleSend} disabled={sending} />
     </>

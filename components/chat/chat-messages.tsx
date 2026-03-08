@@ -7,22 +7,26 @@ import { Bot, User } from "lucide-react";
 import { useEffect, useRef } from "react";
 import type { Message } from "@/src/domain/message/entity";
 
+import { ThinkingIndicator } from "./thinking-indicator";
+
 interface ChatMessagesProps {
   messages: Message[];
   streamingContent: string;
   loading: boolean;
+  thinking: boolean;
 }
 
 export function ChatMessages({
   messages,
   streamingContent,
   loading,
+  thinking,
 }: ChatMessagesProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, streamingContent]);
+  }, [messages, streamingContent, thinking]);
 
   if (loading) {
     return (
@@ -60,6 +64,7 @@ export function ChatMessages({
         {messages.map((msg) => (
           <MessageBubble key={msg.id} role={msg.role} content={msg.content} />
         ))}
+        {thinking && !streamingContent && <ThinkingIndicator />}
         {streamingContent && (
           <MessageBubble role="assistant" content={streamingContent} />
         )}
