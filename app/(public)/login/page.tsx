@@ -26,6 +26,7 @@ export default function LoginPage() {
   }, [user, loading, router]);
 
   const handleGoogleSignIn = async () => {
+    if (!auth || !googleProvider) return;
     try {
       await signInWithPopup(auth, googleProvider);
       router.push("/chat");
