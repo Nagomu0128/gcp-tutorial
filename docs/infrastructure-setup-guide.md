@@ -86,9 +86,37 @@ gcloud config set project <YOUR_PROJECT_ID>
 
 ---
 
-## Phase 3: Terraform の準備
+## Phase 3: 既存 GUI リソースの削除 (該当がある場合のみ)
 
-### 3-1. ディレクトリ構成の確認 [手動]
+> Terraform と名前や設定が異なるリソースが GUI で作成されている場合、先に削除する。
+> 該当がなければスキップ。
+
+```bash
+# Cloud Run
+gcloud run services delete <SERVICE_NAME> --region=asia-northeast2 --quiet
+
+# Cloud Build トリガー
+gcloud builds triggers delete <TRIGGER_NAME> --region=asia-northeast2 --quiet
+
+# Artifact Registry（中のイメージも削除される）
+gcloud artifacts repositories delete <REPO_NAME> --location=asia-northeast2 --quiet
+```
+
+削除確認:
+
+```bash
+gcloud run services list --region=asia-northeast2
+gcloud builds triggers list --region=asia-northeast2
+gcloud artifacts repositories list --location=asia-northeast2
+```
+
+> **注意:** Cloud Build の GitHub 接続とリポジトリリンクは削除しない（Terraform 管理外）。
+
+---
+
+## Phase 4: Terraform の準備
+
+### 4-1. ディレクトリ構成の確認 [手動]
 
 ```
 terraform/
@@ -108,7 +136,7 @@ terraform/
     └── secret_manager/      # シークレット管理
 ```
 
-### 3-2. terraform.tfvars の作成 [手動]
+### 4-2. terraform.tfvars の作成 [手動]
 
 `terraform/environments/dev/terraform.tfvars` を作成します。
 **このファイルには機密情報が含まれるため `.gitignore` に追加してください。**
@@ -128,7 +156,7 @@ gcloud config get-value project
 gcloud projects describe $(gcloud config get-value project) --format='value(projectNumber)'
 ```
 
-### 3-3. .gitignore への追加 [手動]
+### 4-3. .gitignore への追加 [手動]
 
 ```
 # Terraform
@@ -141,16 +169,16 @@ gcloud projects describe $(gcloud config get-value project) --format='value(proj
 
 ---
 
-## Phase 4: Terraform の実行
+## Phase 5: Terraform の実行
 
-### 4-1. 初期化 [CLI]
+### 5-1. 初期化 [CLI]
 
 ```bash
 cd terraform/environments/dev
 terraform init
 ```
 
-### 4-2. 実行計画の確認 [CLI]
+### 5-2. 実行計画の確認 [CLI]
 
 ```bash
 terraform plan
@@ -176,7 +204,7 @@ terraform plan
 > | `google_cloudbuild_trigger` | ビルドトリガー |
 > | `google_storage_bucket` | GCS バケット |
 
-### 4-3. 適用 [CLI]
+### 5-3. 適用 [CLI]
 
 ```bash
 terraform apply
@@ -189,7 +217,7 @@ terraform apply
 > - Cloud SQL インスタンス: **10〜15分**（最も時間がかかる）
 > - その他: 数十秒〜数分
 
-### 4-4. 適用後の確認 [CLI]
+### 5-4. 適用後の確認 [CLI]
 
 ```bash
 # 出力値の確認
@@ -207,9 +235,9 @@ gcloud builds triggers list --region=asia-northeast2
 
 ---
 
-## Phase 5: 適用後の手動確認・調整
+## Phase 6: 適用後の手動確認・調整
 
-### 5-1. Cloud Run の動作確認 [CLI / ブラウザ]
+### 6-1. Cloud Run の動作確認 [CLI / ブラウザ]
 
 ```bash
 # Terraform output から URL を取得
@@ -222,7 +250,7 @@ curl $(terraform output -raw cloud_run_url)
 > 初回は Terraform がデフォルトイメージ (`us-docker.pkg.dev/cloudrun/container/hello`) で
 > デプロイするため、Hello World ページが表示されます。
 
-### 5-2. Cloud Build トリガーの動作確認 [GUI / CLI]
+### 6-2. Cloud Build トリガーの動作確認 [GUI / CLI]
 
 ```bash
 # 手動でトリガーを実行してテスト
@@ -233,7 +261,7 @@ gcloud builds triggers run gcp-tutorial-deploy-dev \
 
 または Cloud Console → Cloud Build → トリガー → 「実行」
 
-### 5-3. Cloud SQL への接続確認 (任意) [CLI]
+### 6-3. Cloud SQL への接続確認 (任意) [CLI]
 
 ```bash
 # Cloud SQL Auth Proxy 経由で接続する場合
@@ -242,11 +270,11 @@ gcloud sql connect gcp-tutorial-db-dev --user=app --database=app
 
 ---
 
-## Phase 6: Terraform State のリモート管理 (推奨)
+## Phase 7: Terraform State のリモート管理 (推奨)
 
 > ローカルの state ファイルは紛失リスクがあるため、GCS に保存することを推奨します。
 
-### 6-1. State 用バケットの作成 [CLI]
+### 7-1. State 用バケットの作成 [CLI]
 
 ```bash
 # Terraform 管理外で手動作成（鶏と卵の問題を回避）
@@ -255,7 +283,7 @@ gcloud storage buckets create gs://<PROJECT_ID>-terraform-state \
   --uniform-bucket-level-access
 ```
 
-### 6-2. backend 設定の有効化 [手動]
+### 7-2. backend 設定の有効化 [手動]
 
 `terraform/environments/dev/main.tf` の backend ブロックのコメントを外す:
 
@@ -268,7 +296,7 @@ terraform {
 }
 ```
 
-### 6-3. State の移行 [CLI]
+### 7-3. State の移行 [CLI]
 
 ```bash
 terraform init -migrate-state
@@ -287,6 +315,7 @@ terraform init -migrate-state
 | gcloud 認証 | **CLI** | `gcloud auth login` |
 | GitHub 接続 (Cloud Build) | **GUI** | OAuth 認証フローが必要 |
 | リポジトリリンク | **GUI** | 接続作成の続き |
+| 既存 GUI リソース削除 | **CLI** | Terraform 再構築前のクリーンアップ |
 | terraform.tfvars 作成 | **手動** (エディタ) | 機密情報の入力 |
 | API 有効化 | **Terraform** | `google_project_service` |
 | IAM / SA | **Terraform** | `google_service_account`, `google_project_iam_member` |
